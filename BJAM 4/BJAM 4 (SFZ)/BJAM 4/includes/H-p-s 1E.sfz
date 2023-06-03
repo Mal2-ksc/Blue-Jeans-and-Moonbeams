@@ -1,0 +1,35 @@
+// Hammer-Pull Slide mode, 1E string
+
+// Bridge pickup
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 1E-hps.ogg 
+pitch_keycenter=64 
+pitch_cc31=$WHAMMY1E 
+amplitude_cc16=100
+
+// Middle pickup
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 1E-hps.ogg 
+pitch_keycenter=64 
+pitch_cc31=$WHAMMY1E 
+amplitude_cc17=100 
+
+// Middle pickup inverted
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 1E-hps.ogg 
+pitch_keycenter=64 
+pitch_cc31=$WHAMMY1E 
+amplitude_cc18=100 
+hicc17=0 
+phase=invert
+
+// Neck pickup
+<region> 
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 1E-hps.ogg 
+pitch_keycenter=64 
+pitch_cc31=$WHAMMY1E 
+amplitude_cc19=100

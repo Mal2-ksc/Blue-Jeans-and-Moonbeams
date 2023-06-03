@@ -1,0 +1,35 @@
+// Hammer-Pull Slide mode, 3G string
+
+// Bridge pickup
+<region>
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 3G-hps.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc16=100
+
+// Middle pickup
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 3G-hps.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc17=100 
+
+// Middle pickup inverted
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 3G-hps.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc18=100
+hicc17=0
+phase=invert
+
+// Neck pickup
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 3G-hps.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc19=100

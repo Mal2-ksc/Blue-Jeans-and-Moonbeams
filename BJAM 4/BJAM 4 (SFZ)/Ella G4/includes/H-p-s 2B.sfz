@@ -1,0 +1,26 @@
+// Ella G: Hammer-Pull-Slide, 2B sample.
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=2B-hps.ogg 
+pitch_keycenter=59 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY2B
+
+// Nashville in unison.
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-hps(z).ogg 
+pitch_keycenter=59 
+amplitude_cc17=100 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY2B
+
+// Nashville invert in unison.
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-hps(z).ogg 
+pitch_keycenter=59 
+amplitude_cc18=100
+phase=invert 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY2B

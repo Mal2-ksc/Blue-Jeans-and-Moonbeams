@@ -1,0 +1,169 @@
+// Normal notes, 4D string.
+
+// Bridge pickup
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 4D-mf.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc16=100 
+xfout_lovel=2
+xfout_hivel=80
+hivel=80
+ampeg_attack=$V1FADE 
+
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 4D-mf.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc16=100 
+xfin_lovel=2 
+xfin_hivel=80 
+hivel=80
+
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 4D-f.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc16=100 
+lovel=81 
+hivel=110
+
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 4D-ff.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc16=100 
+lovel=110 
+hivel=127
+
+// Middle pickup
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-mf.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc17=100 
+xfout_lovel=2 
+xfout_hivel=80 
+hivel=80 
+ampeg_attack=$V1FADE
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-mf.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc17=100 
+xfin_lovel=2 
+xfin_hivel=80 
+hivel=80
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-f.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc17=100 
+lovel=81 
+hivel=110
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-ff.ogg 
+pitch_keycenter=50 
+pitch_cc31=$WHAMMY4D 
+amplitude_cc17=100 
+lovel=110 
+hivel=127
+
+// Middle pickup inverted
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-mf.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc18=100
+hicc17=0
+phase=invert
+xfout_lovel=2
+xfout_hivel=80
+hivel=80
+ampeg_attack=$V1FADE
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-mf.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc18=100
+hicc17=0
+phase=invert
+xfin_lovel=2
+xfin_hivel=80
+hivel=80
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-f.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc18=100
+hicc17=0
+phase=invert
+lovel=81
+hivel=110
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 4D-ff.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc18=100
+hicc17=0
+phase=invert
+lovel=110
+hivel=127
+
+// Neck pickup
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 4D-mf.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc19=100
+xfout_lovel=2
+xfout_hivel=80
+hivel=80
+ampeg_attack=$V1FADE
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 4D-mf.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc19=100
+xfin_lovel=2
+xfin_hivel=80
+hivel=80
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 4D-f.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc19=100
+lovel=81
+hivel=110
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 4D-ff.ogg
+pitch_keycenter=50
+pitch_cc31=$WHAMMY4D
+amplitude_cc19=100
+lovel=110
+hivel=127

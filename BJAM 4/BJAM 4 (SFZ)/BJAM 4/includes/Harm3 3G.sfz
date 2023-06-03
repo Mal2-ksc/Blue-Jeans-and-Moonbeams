@@ -1,0 +1,81 @@
+// Harmonic 3 (octave + 701.6 cents up from base pitch), 3G string
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge harmonic 2-3G.ogg 
+pitch_keycenter=55 
+pitch_cc31=$WHAMMY3G 
+amplitude_cc16=100 
+xfout_locc72=0 
+xfout_hicc72=127 
+tune=701.6
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle harmonic 2-3G.ogg 
+pitch_keycenter=55 
+pitch_cc31=$WHAMMY3G 
+amplitude_cc17=100 
+xfout_locc72=0 
+xfout_hicc72=127 
+tune=701.6
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle harmonic 2-3G.ogg 
+pitch_keycenter=55 
+pitch_cc31=$WHAMMY3G 
+amplitude_cc18=100 
+xfout_locc72=0 
+xfout_hicc72=127 
+tune=701.6 
+hicc17=0 
+phase=invert
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck harmonic 2-3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc19=100
+xfout_locc72=0
+xfout_hicc72=127
+tune=701.6
+
+// Chug crossfades in. Used for Fundamental. 3G string.
+<region>
+delay_cc60=$MAXPUPPHASE
+sample=bridge chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc16=100
+xfin_locc72=0
+xfin_hicc72=127 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc17=100
+xfin_locc72=0
+xfin_hicc72=127 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc18=100
+hicc17=0
+phase=invert
+xfin_locc72=0
+xfin_hicc72=127 
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc19=100
+xfin_locc72=0
+xfin_hicc72=127 

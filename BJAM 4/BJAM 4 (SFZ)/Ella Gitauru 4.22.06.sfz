@@ -1,0 +1,1328 @@
+// Ella Gitauru 4 by Malaclypse the Younger, mal2fnord@gmail.com
+// Long tone samples can't crossfade because of differences in pitch glide. Only mf and "fake p" are crossfaded because they're the same sample. I might have made different design decisions at sampling time if I had targeted SFZ in the first place.
+
+//Keyswitch and Noises layout (C3 = key 60)
+// ░░░░░░ C-2  Open Position                    C-1  Chuck noise
+//   ▓▓▓▓ C#-2 Fifth Position                   C#-1 Swipe noise
+// ░░░░░░ D-2  Solo Mode                        D-1  Thump noise (side of fist)
+//   ▓▓▓▓ D#-2 Hammer-on/Pull-off/Slide mode    D#-1 Slap noise (open hand)
+// ░░░░░░ E-2  Up Neck Position                 E-1  Knock noise (knuckles)
+// ░░░░░░ F-2  Harmonic 2                       F-1  Tap noise (fingertip/nail)
+//   ▓▓▓▓ F#-2 Mute Long                        F#-1 Pick 6E noise
+// ░░░░░░ G-2  Harmonic 3                       G-1  Pick 5A noise
+//   ▓▓▓▓ G#-2 Mute Short                       G#-1 Pick 4D noise
+// ░░░░░░ A-2  Harmonic 5                       A-1  Pick 3G noise
+//   ▓▓▓▓ A#-2 Slap & Pop Mode                  A#-1 Pick 2B noise
+// ░░░░░░ B-2  Harmonic 7                       B-1  Pick 1E noise
+
+// Curve 0 is linear, from 0 to 1. v000=0 v127=1
+// Curve 1 is bipolar, from -1 to 1.  v000=-1 v127=1
+// Curve 2 is inverted linear, from 1 to 0. v000=1 v127=0
+// Curve 3 bipolar inverted, from 1 to -1. v000=1 v127=-1
+// Curve 4 concave (square the Curve 0 value).
+// Curve 5 is Xfin power curve (square root of Curve 0 value).
+// Curve 6 is Xfout power curve (square root of Curve 2 value).
+<curve> curve_index=7 v000=-1 v105=0 v106=0 v127=0.2 // Dive Bomb/Neck Dive curve. 83%=neutral.
+
+<control>
+set_cc28=89 label_cc28=28:Fret Track ₇₀   // How much darker should high hand positions be than low?
+
+// You can reorder the keyswitches here if you like, but they must remain in the 0 to 11 range.
+// Open Position, "cowboy chords". Every note on as long a string as possible.
+#define $KEY4OPENPOSITION 0
+// Fifth Position, every note played between frets 5 and 8 when possible.
+#define $KEY4FIFTHPOSITION 1
+// Solo Mode, each string is used for 7 semitones.
+#define $KEY4SOLOMODE 2
+// Hammer/Pull-off/Slide mode. This is also activated by the Sostenuto pedal (CC66).
+#define $KEY4HAMMER_PULL_SLIDE 3
+// Up Neck position, every note played between frets 11 and 14 when possible.
+#define $KEY4UPNECKPOSITION 4
+// Second harmonic (octave up)
+#define $KEY4HARMONIC2 5
+// Light palm muting. Reducing CC71 (Mute Mix) allows more sustain to bleed through.
+#define $KEY4MUTE_LIGHT 6
+// Third harmonic (octave + fifth up)
+#define $KEY4HARMONIC3 7
+// Heavy palm muting, aka "chug". Reducing CC71 (Mute Mix) allows more Light Mute to bleed through.
+#define $KEY4MUTE_HEAVY 8
+// Fifth harmonic (2 octaves + just major third [386 cents] up).
+#define $KEY4HARMONIC5 9
+// Slap and Pop mode
+#define $KEY4SLAP_POP 10
+// Seventh harmonic (2 octaves + harmonic seventh [959 cents] up)
+#define $KEY4HARMONIC7 11
+
+// Whammy values are intended to simulate bending/twisting the neck, or shaking the entire guitar. As this is abusive to the instrument, real world testing was NOT performed, but safe performance limits are probably about half of these maximum values.
+#define $WHAMMY1E 75 // How many cents the 1E string detunes at max whammy.
+#define $WHAMMY2B 100 // How many cents the 2B string detunes at max whammy.
+#define $WHAMMY3G 150 // How many cents the 3G string detunes at max whammy.
+#define $WHAMMY4D 125 // How many cents the 4D string detunes at max whammy.
+#define $WHAMMY5A 140 // How many cents the 5A string detunes at max whammy.
+#define $WHAMMY6E 200 // How many cents the 6E string detunes at max whammy.
+
+// At least one of the following should be turned up so the SFZ makes sound right away.
+#define $NORMAL 127 // Default starting value for the normal 6 string side.
+#define $NASHVILLE 0 // Default starting value for the Nashville side.
+
+#define $V1FADE 0.1 // How long (in seconds) is the attack of Velocity 1 notes?
+#define $MODDEPTH 120 // How wide (in cents) is maximum modulation?
+#define $SINGLEBEND 200 // How far (in total cents) can the Pitch Class Tune move notes?
+#define $MAXDETUNE 10 // How far (in ± cents) can the Nashville Detune move the pitch?
+#define $NOTEMIX 24 // Total swing (in dB) of Mix C, Mix C#, etc.
+#define $SHAKETIME 10 // Mod fade-in, seconds after note-on (to full width)
+#define $STARTVOL 80 // Default value for CC7 (Volume).
+#define $PICKDRIFT 200 // How far (in ± cents) can CC9 move the pick noises?
+#define $PB_RANGE 200 // How wide (in cents) is pitch bending? Swings both ways.
+#define $MAXPUPPHASE 0.023 // What is the max delay (in seconds) that can be applied as 6/Nash phase?
+
+set_cc1=0 label_cc1=∿1:Mod Depth ₀  // ❶
+set_cc3=63 label_cc3=∿3:Mod Rate ₅₀ // ❶Modulation rate. 0 = 3 Hz, 127 = 8 Hz. (see below in "global")
+set_cc4=0 label_cc4=4:Mod Fade ₀ // ❶Length of time for modulation to fade in
+set_cc7=$STARTVOL label_cc7=⇌7:Master Vol. ₆₃  // ❶
+// CC8 = Balance.
+set_cc10=63 label_cc10=10:Pick Pitch ± ₅₀ // ❶Affects both manual and automatic pick noises.
+// CC11 = Expression. CC12 and 13 are usually for automation.
+set_cc14=0 label_cc14=14:Autopicking ₀  // ❶
+set_cc16=127 label_cc16=⇌16:6-str. vol. ₁₀₀ // ❶Enable both 6 and Nashville for a 12 string
+set_cc17=$NASHVILLE label_cc17=⇌17:Nash vol. ₀ // ❶Enable both 6 and Nashville for a 12 string
+set_cc18=0 label_cc18=⇌18:Nash Inv. ₀ // ❶Inverted Nashville signal
+set_cc19=89 label_cc19=Џ19:NashDetune₇₀ // ❶"Nashville" only. Default +40% of $MAXDETUNE.
+// Neutral at 83%. Each string has its own bend range, determined by experiment.
+set_cc31=106 label_cc31=Џ31:Neck Dive ₈₃ // ❶Dive depths NOT determined by experiment.
+// CC36 to 47 control per-pitch-class tuning. All start centered (50%) and swing both ways.
+set_cc36=63 label_cc36=Џ36:Tune C ₅₀      // ░░░░░░ ❶
+set_cc37=63 label_cc37=Џ37:Tune C♯/D♭ ₅₀   //   ▓▓▓▓
+set_cc38=63 label_cc38=Џ38:Tune D ₅₀      // ░░░░░░ ❶
+set_cc39=63 label_cc39=Џ39:Tune D♯/E♭ ₅₀   //   ▓▓▓▓
+set_cc40=63 label_cc40=Џ40:Tune E ₅₀      // ░░░░░░ ❶
+set_cc41=63 label_cc41=Џ41:Tune F ₅₀      // ░░░░░░ ❶
+set_cc42=63 label_cc42=Џ42:Tune F♯/G♭ ₅₀   //   ▓▓▓▓
+set_cc43=63 label_cc43=Џ43:Tune G ₅₀      // ░░░░░░ ❶
+set_cc44=63 label_cc44=Џ44:Tune G♯/A♭ ₅₀   //   ▓▓▓▓
+set_cc45=63 label_cc45=Џ45:Tune A ₅₀      // ░░░░░░ ❶
+set_cc46=63 label_cc46=Џ46:Tune A♯/B♭ ₅₀   //   ▓▓▓▓
+set_cc47=63 label_cc47=Џ47:Tune B ₅₀      // ░░░░░░ ❶
+// CC48 to 59 control per-pitch-class mixing. All start centered (50%) and swing both ways.
+set_cc48=63 label_cc48=⇌48:Mix C ₅₀       // ░░░░░░ ❶
+set_cc49=63 label_cc49=⇌49:Mix C♯/D♭ ₅₀    //   ▓▓▓▓
+set_cc50=63 label_cc50=⇌50:Mix D ₅₀       // ░░░░░░ ❶
+set_cc51=63 label_cc51=⇌51:Mix D♯/E♭ ₅₀    //   ▓▓▓▓
+set_cc52=63 label_cc52=⇌52:Mix E ₅₀       // ░░░░░░ ❶
+set_cc53=63 label_cc53=⇌53:Mix F ₅₀       // ░░░░░░ ❶
+set_cc54=63 label_cc54=⇌54:Mix F♯/G♭ ₅₀    //   ▓▓▓▓
+set_cc55=63 label_cc55=⇌55:Mix G ₅₀       // ░░░░░░ ❶
+set_cc56=63 label_cc56=⇌56:Mix G♯/A♭ ₅₀    //   ▓▓▓▓
+set_cc57=63 label_cc57=⇌57:Mix A ₅₀       // ░░░░░░ ❶
+set_cc58=63 label_cc58=⇌58:Mix A♯/B♭ ₅₀    //   ▓▓▓▓
+set_cc59=63 label_cc59=⇌59:Mix B ₅₀       // ░░░░░░ ❶
+set_cc60=0 label_cc60=60:6-Str PhDly ₀       // ░░░░░░ ❶
+set_cc61=51 label_cc61=61:Nash PhDly ₄₀       //   ▓▓▓▓
+set_cc66=0 label_cc66=66:Legato Ped ₀       // ░░░░░░ ❶
+set_cc71=100 label_cc71=71:Spank ₁₀₀  // ❶
+set_cc72=0 label_cc72=72:Fundamental ₀  // ❶
+set_cc73=0 label_cc73=73:Attack Time ₀ // ❶Max roll-in of notes based on CC73.
+// still available: 102-119
+default_path=Ella G4/ // I use a flat file structure. How convenient.
+
+//Enable this line to turn the Tone Stack back on. But now you'll run out of CCs in the Controls page.
+//#include BJAM 4/includes/Tone Stack.sfz
+
+<global>
+sw_default=2 sw_lokey=0 sw_hikey=11 ampeg_attack=0.001 ampeg_release=0.15 xf_keycurve=power volume=0
+amp_veltrack=98 // Keeps dynamic range to about 36 dB (ff attack vs. pp attack)
+lfo01_pitch_oncc1=$MODDEPTH // Width of maximum modulation.
+lfo01_freq=3 lfo01_freq_oncc3=5 // Modulation rate. 0 = 3 Hz, 127 = 8 Hz.
+lfo01_fade_oncc4=$SHAKETIME
+amplitude_oncc7=100 amplitude_curvecc7=4 // default for CC7, specifying avoids glitchiness.
+pan_oncc10=0 // Override the use of CC10 to perform panning, so it can be re-used.
+pitch_curvecc10=1 // Pick pitch starts centered, goes both ways.
+ampeg_delaycc14=0.05 // Delay of notes to make room for Autopick.
+pitch_curvecc19=3 // Pitch of Nashville side can be adjusted either direction.
+pitch_curvecc31=7 // Custom Dive Bomb/Neck Dive curve. 83% is neutral.
+// CC36 to 47 control per-pitch-class tuning, all are center-focused linear.
+  pitch_curvecc36=1 pitch_curvecc37=1 pitch_curvecc38=1 pitch_curvecc39=1
+  pitch_curvecc40=1 pitch_curvecc41=1 pitch_curvecc42=1 pitch_curvecc43=1
+  pitch_curvecc44=1 pitch_curvecc45=1 pitch_curvecc46=1 pitch_curvecc47=1
+// CC48 to 59 control per-pitch-class volume, all are center-focused linear.
+  volume_curvecc48=1 volume_curvecc49=1 volume_curvecc50=1 volume_curvecc51=1
+  volume_curvecc52=1 volume_curvecc53=1 volume_curvecc54=1 volume_curvecc55=1
+  volume_curvecc56=1 volume_curvecc57=1 volume_curvecc58=1 volume_curvecc59=1
+// delay curves for pickup phasing: linear is simplest, but x² gives more range
+  delay_curvecc60=4 delay_curvecc61=4 
+ampeg_attackcc73=1 // Max roll-in of notes based on CC73 (time in seconds).
+sostenuto_sw=off
+// Bend range for primary Pitch Bend, both directions.
+bend_up=$PB_RANGE bend_down=-$PB_RANGE
+fil_type=lpf_1p cutoff=11000 cutoff_curvecc28=5  // Setting up darkening filter for all notes.
+
+//Open Position ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4OPENPOSITION locc66=64 group=5 #include "Ella G4/includes/Legato-open.sfz" // Sostenuto pedal down
+
+<master> sw_last=$KEY4OPENPOSITION hicc66=63 sw_label=C-2 Open Position delay_cc14=0.05
+group=5
+// 6E, extended range -- Nashville side is an octave up.
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-3178 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3780 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4005 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4123 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4243 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Note 6E.sfz"
+// 6E (40) -- Nashville side is an octave up.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 6E.sfz"
+// 5A (45) -- Nashville side is an octave up.
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 5A.sfz"
+// 4D (50) -- Nashville side is an octave up.
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 4D.sfz"
+// 3G (55) uses 4D sample -- Nashville side is an octave up.
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 3G.sfz"
+// 2B (59): 2B -- Nashville side is in unison.
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4494 volume_cc28=1 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4628 volume_cc28=2 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Note 2B.sfz"
+// 1E (64) -- Nashville side is in unison.
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 volume_cc28=2 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 volume_cc28=2 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 volume_cc28=3 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 volume_cc28=5 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 volume_cc28=6 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5345 volume_cc28=7#include "Ella G4/includes/Note 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5504 volume_cc28=8#include "Ella G4/includes/Note 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=9 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5831 volume_cc28=10 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=13 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=15 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=16 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=17 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6546 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6357 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6127 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6000 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=20 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5504 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=87 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5345 volume_cc28=14 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=88 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5195 volume_cc28=15 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=89 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-5045 volume_cc28=16 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=90 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4903 volume_cc28=17 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=91 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4762 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=92 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=93 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=94 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=95 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4243 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=96 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4123 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=97 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4005 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=98 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3780 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=99 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=100 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3368 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+
+//Fifth Position ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4FIFTHPOSITION locc66=64 group=5 #include "Ella G4/includes/Legato-fifth.sfz" // Sostenuto pedal down
+
+<master> sw_last=$KEY4FIFTHPOSITION hicc66=63 sw_label=C#-2 Fifth Position delay_cc14=0.05
+group=5
+// 6E, extended range -- Nashville side is an octave up.
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-3178 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3780 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4005 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4123 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4243 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Note 6E.sfz"
+// 6E (40) -- Nashville side is an octave up.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5345 volume_cc28=1 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5504 volume_cc28=1 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=2 #include "Ella G4/includes/Note 6E.sfz"
+// 5A (45) -- Nashville side is an octave up.
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 volume_cc28=1 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 volume_cc28=2 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5345 volume_cc28=3 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5504 volume_cc28=4 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-5663 volume_cc28=5 #include "Ella G4/includes/Note 5A.sfz"
+// 4D (50) -- Nashville side is an octave up.
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-5045 volume_cc28=1 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-5195 volume_cc28=2 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5345 volume_cc28=3 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5504 volume_cc28=4 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5663 volume_cc28=5 #include "Ella G4/includes/Note 4D.sfz"
+// 3G (55) uses 4D sample -- Nashville side is an octave up.
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5045 volume_cc28=2 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5195 volume_cc28=3 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5345 volume_cc28=4 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5504 volume_cc28=5 #include "Ella G4/includes/Note 3G.sfz"
+// 2B (59): 2B -- Nashville side is in unison.
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5045 volume_cc28=5 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5195 volume_cc28=5 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-5345 volume_cc28=5 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-5504 volume_cc28=5.5 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-5663 volume_cc28=6 #include "Ella G4/includes/Note 2B.sfz"
+// 1E (64) -- Nashville side is in unison.
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 volume_cc28=5 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 volume_cc28=6 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5345 volume_cc28=7 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5504 volume_cc28=8 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=9 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5831 volume_cc28=10 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=13 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=15 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=16 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=17 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6546 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6357 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6127 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6000 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=20 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5504 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=87 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5345 volume_cc28=14 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=88 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5195 volume_cc28=15 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=89 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-5045 volume_cc28=16 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=90 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4903 volume_cc28=17 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=91 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4762 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=92 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=93 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=94 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=95 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4243 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=96 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4123 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=97 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4005 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=98 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3780 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=99 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=100 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3368 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+
+//Solo Mode ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4SOLOMODE locc66=64 group=5 #include "Ella G4/includes/Legato-solo.sfz" // Sostenuto pedal down
+
+<master> sw_last=$KEY4SOLOMODE hicc66=63 sw_label=D-2 Solo Mode delay_cc14=0.05 group=5
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-3178 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3780 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4005 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4123 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4243 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Note 6E.sfz"
+// 6E (40) -- Nashville side is an octave up.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Note 6E.sfz"
+// 5A (45) -- Nashville side is an octave up.
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 volume_cc28=1 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 volume_cc28=1 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 volume_cc28=2 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 volume_cc28=2 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5345 volume_cc28=3 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5504 volume_cc28=3 #include "Ella G4/includes/Note 5A.sfz"
+// 4D (50) -- Nashville side is an octave up.
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 volume_cc28=2 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-5045 volume_cc28=2 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-5195 volume_cc28=3 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5345 volume_cc28=3 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5504 volume_cc28=4 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5663 volume_cc28=4 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=4 #include "Ella G4/includes/Note 4D.sfz"
+// 3G (55) uses 4D sample -- Nashville side is an octave up.
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5195 volume_cc28=4 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5345 volume_cc28=4 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5504 volume_cc28=4 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5663 volume_cc28=4 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5831 volume_cc28=5 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6000 volume_cc28=5 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6127 volume_cc28=8 #include "Ella G4/includes/Note 3G.sfz"
+// 2B (59): 2B -- Nashville side is in unison.
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-5663 volume_cc28=6 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5831 volume_cc28=7 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6000 volume_cc28=9 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6127 volume_cc28=10 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-6357 volume_cc28=10 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-6546 volume_cc28=11 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-6734 volume_cc28=12 #include "Ella G4/includes/Note 2B.sfz"
+// 1E (64) -- Nashville side is in unison.
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=13 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=15 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=16 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=17 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6546 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6357 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6127 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6000 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=20 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5504 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=87 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5345 volume_cc28=14 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=88 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5195 volume_cc28=15 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=89 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-5045 volume_cc28=16 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=90 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4903 volume_cc28=17 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=91 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4762 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=92 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=93 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=94 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=95 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4243 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=96 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4123 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=97 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4005 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=98 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3780 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=99 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=100 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3368 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+
+//Hammer On/Pull-Off/Slide ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4HAMMER_PULL_SLIDE sw_label=D#-2 group=5 Hammer-Pull-Slide #include "Ella G4/includes/Legato-solo.sfz"
+
+//Up Neck Position ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4UPNECKPOSITION locc66=64 group=5 #include "Ella G4/includes/Legato-eleventh.sfz" // Sostenuto pedal down
+
+<master> sw_last=$KEY4UPNECKPOSITION hicc66=63 sw_label=E-2 Up Neck Position delay_cc14=0.05
+group=5
+// 6E, extended range -- Nashville side is an octave up.
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-3178 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3780 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4005 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4123 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4243 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Note 6E.sfz"
+// 6E (40) -- Nashville side is an octave up.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 volume_cc28=1 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=1 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 volume_cc28=2 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 volume_cc28=2 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 volume_cc28=3 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5345 volume_cc28=3 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5504 volume_cc28=4 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=4 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5861 volume_cc28=5 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=5 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=6 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=6 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=7 #include "Ella G4/includes/Note 6E.sfz"
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=7 #include "Ella G4/includes/Note 6E.sfz"
+// 5A (45) -- Nashville side is an octave up.
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6000 volume_cc28=5 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6127 volume_cc28=6 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6357 volume_cc28=6 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6546 volume_cc28=7 #include "Ella G4/includes/Note 5A.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-6734 volume_cc28=7 #include "Ella G4/includes/Note 5A.sfz"
+// 4D (50) -- Nashville side is an octave up.
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-6000 volume_cc28=5 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-6127 volume_cc28=6 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6357 volume_cc28=6 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6546 volume_cc28=7 #include "Ella G4/includes/Note 4D.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6734 volume_cc28=7 #include "Ella G4/includes/Note 4D.sfz"
+// 3G (55) uses 4D sample -- Nashville side is an octave up.
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6000 volume_cc28=5 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6127 volume_cc28=7 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6357 volume_cc28=8 #include "Ella G4/includes/Note 3G.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6546 volume_cc28=6 #include "Ella G4/includes/Note 3G.sfz"
+// 2B (59): 2B -- Nashville side is in unison.
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6000 volume_cc28=6 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6127 volume_cc28=8 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-6357 volume_cc28=10 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-6546 volume_cc28=12 #include "Ella G4/includes/Note 2B.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-6734 volume_cc28=13 #include "Ella G4/includes/Note 2B.sfz"
+// 1E (64) -- Nashville side is in unison.
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=13 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=15 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=16 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=17 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6546 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6357 volume_cc28=18 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6127 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6000 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=20 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5504 volume_cc28=19 #include "Ella G4/includes/Note 1E.sfz"
+<group> key=87 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5345 volume_cc28=14 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=88 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5195 volume_cc28=15 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=89 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-5045 volume_cc28=16 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=90 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4903 volume_cc28=17 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=91 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4762 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=92 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 volume_cc28=18 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=93 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=94 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 volume_cc28=19 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=95 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4243 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=96 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4123 volume_cc28=20 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=97 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4005 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=98 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3780 volume_cc28=21 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=99 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+<group> key=100 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3368 volume_cc28=22 #include "Ella G4/includes/Note 1E 15va.sfz"
+
+//Harmonic 2 ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4HARMONIC2 sw_label=F-2 Harmonic 2 delay_cc14=0.05 group=5
+// 6E, extended range. Nashville side is up an octave.
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm2 7B.sfz"
+// 6E, Nashville side is up an octave.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm2 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm2 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm2 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm2 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm2 6E.sfz"
+// 5A, Nashville side is up an octave.
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm2 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm2 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm2 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm2 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm2 5A.sfz"
+// 4D, Nashville side is up an octave.
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm2 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm2 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm2 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm2 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm2 4D.sfz"
+// 3G, Nashville side is up an octave.
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm2 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm2 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm2 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm2 3G.sfz"
+// 2B, Nashville side is in unison.
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm2 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm2 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm2 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm2 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm2 2B.sfz"
+// 1E, Nashville side is in unison.
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+// D#5 (87): 1E, extended range. Nashville side is in unison.
+<group> key=87 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=88 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=89 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=90 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=91 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=92 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=93 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=94 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=95 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=96 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=97 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=98 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+<group> key=99 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm2 1E.sfz"
+ 
+//Light Palm Mute ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4MUTE_LIGHT locc66=64 group=5 #include "Ella G4/includes/Legato-open.sfz" // Sostenuto pedal down
+
+<master> sw_last=$KEY4MUTE_LIGHT hicc66=63 sw_label=F#-2 Light Palm Mute delay_cc14=0.05
+group=5
+// 6E (extended range)
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-3178 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3368 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3780 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4005 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4123 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4243 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Mute 6E.sfz"
+// 6E (40)
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Mute 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Mute 6E.sfz"
+// 5A (45)
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Mute 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Mute 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Mute 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Mute 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Mute 5A.sfz"
+// 4D (50)
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Mute 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Mute 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Mute 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Mute 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Mute 4D.sfz"
+// 3G (55)
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Mute 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Mute 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Mute 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Mute 3G.sfz"
+// 2B (59)
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Mute 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4494 volume_cc28=1 #include "Ella G4/includes/Mute 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4628 volume_cc28=2 #include "Ella G4/includes/Mute 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Mute 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Mute 2B.sfz"
+// 1E (64)
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 volume_cc28=2 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 volume_cc28=2 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 volume_cc28=3 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 volume_cc28=5 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 volume_cc28=6 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5345 volume_cc28=7 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5504 volume_cc28=8 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=9 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5831 volume_cc28=10 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=12 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=14 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=15 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=16 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=16 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6546 volume_cc28=17 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6357 volume_cc28=17 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6127 volume_cc28=18 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6000 volume_cc28=18 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=19 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=20 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5504 volume_cc28=19 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=87 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5345 volume_cc28=14 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=88 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5195 volume_cc28=15 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=89 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5045 volume_cc28=16 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=90 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 volume_cc28=17 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=91 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=18 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=92 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4628 volume_cc28=18 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=93 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4494 volume_cc28=19 #include "Ella G4/includes/Mute 1E.sfz"
+<group> key=94 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4368 volume_cc28=19 #include "Ella G4/includes/Mute 1E.sfz"
+
+//Harmonic 3 ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4HARMONIC3 sw_label=G-2 Harmonic 3 delay_cc14=0.05 group=5
+// 6E, extended range. Nashville side is up an octave.
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm3 7B.sfz"
+// 6E, Nashville side is up an octave.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm3 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm3 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm3 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm3 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm3 6E.sfz"
+// 5A, Nashville side is up an octave.
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm3 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm3 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm3 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm3 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm3 5A.sfz"
+// 4D, Nashville side is up an octave.
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm3 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm3 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm3 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm3 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm3 4D.sfz"
+// 3G, Nashville side is up an octave.
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm3 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm3 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm3 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm3 3G.sfz"
+// 2B, Nashville side is in unison.
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm3 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm3 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm3 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm3 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm3 2B.sfz"
+// 1E, Nashville side is in unison.
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+// D#5 (87): 1E, extended range. Nashville side is in unison.
+<group> key=87 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=88 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=89 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=90 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=91 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+<group> key=92 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
+
+//Heavy Palm Mute ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4MUTE_HEAVY locc66=64 group=5 #include "Ella G4/includes/Legato-open.sfz" // Sostenuto pedal down
+
+<master> sw_last=$KEY4MUTE_HEAVY hicc66=63 ampeg_decay=0.8 sw_label=F#-2 Heavy Palm Mute delay_cc14=0.05
+group=5
+<group>
+// 6E (extended range)
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-3178 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3368 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3780 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4005 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4123 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4243 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Chug 6E.sfz"
+// 6E (40)
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Chug 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Chug 6E.sfz"
+// 5A (45)
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Chug 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Chug 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Chug 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Chug 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Chug 5A.sfz"
+// 4D (50)
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Chug 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Chug 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Chug 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Chug 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Chug 4D.sfz"
+// 3G (55)
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Chug 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Chug 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Chug 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Chug 3G.sfz"
+// 2B (59)
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Chug 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4494 volume_cc28=1 #include "Ella G4/includes/Chug 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4628 volume_cc28=2 #include "Ella G4/includes/Chug 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Chug 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Chug 2B.sfz"
+// 1E (64)
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 volume_cc28=2 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 volume_cc28=2 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 volume_cc28=3 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 volume_cc28=5 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 volume_cc28=6 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5345 volume_cc28=7 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5504 volume_cc28=8 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=9 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5831 volume_cc28=10 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=12 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=14 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=15 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=16 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=16 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6546 volume_cc28=17 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6357 volume_cc28=17 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6127 volume_cc28=18 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6000 volume_cc28=18 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=19 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=20 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5504 volume_cc28=19 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=87 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5345 volume_cc28=14 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=88 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5195 volume_cc28=15 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=89 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5045 volume_cc28=16 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=90 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 volume_cc28=17 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=91 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=18 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=92 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4628 volume_cc28=18 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=93 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4494 volume_cc28=19 #include "Ella G4/includes/Chug 1E.sfz"
+<group> key=94 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4368 volume_cc28=19 #include "Ella G4/includes/Chug 1E.sfz"
+ 
+//Harmonic 5 ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4HARMONIC5 sw_label=A-2 Harmonic 5 delay_cc14=0.05 group=5
+// 6E, extended range. Nashville side is up an octave.
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm5 7B.sfz"
+// 6E, Nashville side is up an octave.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm5 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm5 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm5 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm5 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm5 6E.sfz"
+// 5A, Nashville side is up an octave.
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm5 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm5 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm5 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm5 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm5 5A.sfz"
+// 4D, Nashville side is up an octave.
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm5 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm5 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm5 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm5 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm5 4D.sfz"
+// 3G, Nashville side is up an octave.
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm5 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm5 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm5 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm5 3G.sfz"
+// 2B, Nashville side is in unison.
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm5 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm5 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm5 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm5 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm5 2B.sfz"
+// 1E, Nashville side is in unison.
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+// 1E extended range, Nashville side is in unison.
+<group> key=87 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=88 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=89 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=90 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=91 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+<group> key=92 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm5 1E.sfz"
+
+//Slap and Pop ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4SLAP_POP locc66=64 group=5 #include "Ella G4/includes/Legato-open.sfz" // Sostenuto pedal down
+
+<master> sw_last=$KEY4SLAP_POP hicc66=63 sw_label=A#-2 Slap and Pop
+group=5
+// 6E, extended range
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-3000 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-3178 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-3368 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-3568 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-3780 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4005 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4123 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4243 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5045 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5195 #include "Ella G4/includes/Slap 6E.sfz"
+// 6E
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Slap 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Slap 6E.sfz"
+// 5A
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Slap 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Slap 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Slap 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Slap 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Slap 5A.sfz"
+// 4D
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Slap 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include cutoff_cc28=-4494 "Ella G4/includes/Slap 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Slap 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Slap 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 #include "Ella G4/includes/Slap 4D.sfz"
+// 3G
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Slap 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4494 #include "Ella G4/includes/Slap 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4628 #include "Ella G4/includes/Slap 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4762 #include "Ella G4/includes/Slap 3G.sfz"
+// 2B
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-4368 #include "Ella G4/includes/Slap 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-4494 volume_cc28=1 #include "Ella G4/includes/Slap 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-4628 volume_cc28=2 #include "Ella G4/includes/Slap 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Slap 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Slap 2B.sfz"
+// 1E (using 2B sample)
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-4368 volume_cc28=2 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-4494 volume_cc28=2 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4628 volume_cc28=3 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=3 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4903 volume_cc28=4 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-5045 volume_cc28=5 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-5195 volume_cc28=6 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-5345 volume_cc28=7 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5504 volume_cc28=8 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=9 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5831 volume_cc28=10 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-6000 volume_cc28=12 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-6127 volume_cc28=14 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-6357 volume_cc28=15 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-6546 volume_cc28=16 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-6734 volume_cc28=16 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-6546 volume_cc28=17 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-6357 volume_cc28=17 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-6127 volume_cc28=18 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX cutoff_cc28=-6000 volume_cc28=18 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX cutoff_cc28=-5831 volume_cc28=19 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX cutoff_cc28=-5663 volume_cc28=20 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX cutoff_cc28=-5504 volume_cc28=19 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=87 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX cutoff_cc28=-5345 volume_cc28=14 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=88 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX cutoff_cc28=-5195 volume_cc28=15 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=89 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX cutoff_cc28=-5045 volume_cc28=16 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=90 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX cutoff_cc28=-4903 volume_cc28=17 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=91 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX cutoff_cc28=-4762 volume_cc28=18 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=92 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX cutoff_cc28=-4628 volume_cc28=18 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=93 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX cutoff_cc28=-4494 volume_cc28=19 #include "Ella G4/includes/Slap 1E.sfz"
+<group> key=94 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX cutoff_cc28=-4368 volume_cc28=19 #include "Ella G4/includes/Slap 1E.sfz"
+
+//Harmonic 7 ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> sw_last=$KEY4HARMONIC7 sw_label=B-2 Harmonic 7 delay_cc14=0.05 group=5
+// 6E, extended range. Nashville side is up an octave.
+<group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=26 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=27 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=28 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=29 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=30 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=31 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=32 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=33 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=34 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=35 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=36 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=37 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=38 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+<group> key=39 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm7 7B.sfz"
+// 6E, Nashville side is up an octave.
+<group> key=40 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm7 6E.sfz"
+<group> key=41 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm7 6E.sfz"
+<group> key=42 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm7 6E.sfz"
+<group> key=43 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm7 6E.sfz"
+<group> key=44 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm7 6E.sfz"
+// 5A, Nashville side is up an octave.
+<group> key=45 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm7 5A.sfz"
+<group> key=46 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm7 5A.sfz"
+<group> key=47 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm7 5A.sfz"
+<group> key=48 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm7 5A.sfz"
+<group> key=49 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm7 5A.sfz"
+// 4D, Nashville side is up an octave.
+<group> key=50 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm7 4D.sfz"
+<group> key=51 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm7 4D.sfz"
+<group> key=52 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm7 4D.sfz"
+<group> key=53 pitch_cc41=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm7 4D.sfz"
+<group> key=54 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm7 4D.sfz"
+// 3G, Nashville side is up an octave.
+<group> key=55 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm7 3G.sfz"
+<group> key=56 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm7 3G.sfz"
+<group> key=57 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm7 3G.sfz"
+<group> key=58 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm7 3G.sfz"
+// 2B, Nashville side is in unison.
+<group> key=59 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm7 2B.sfz"
+<group> key=60 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm7 2B.sfz"
+<group> key=61 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm7 2B.sfz"
+<group> key=62 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm7 2B.sfz"
+<group> key=63 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm7 2B.sfz"
+// 1E, Nashville side is in unison.
+<group> key=64 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=65 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=66 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=67 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=68 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=69 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=70 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=71 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=72 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=73 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=74 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=75 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=76 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=77 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=78 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=79 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=80 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=81 pitch_cc45=$SINGLEBEND gain_cc57=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=82 pitch_cc46=$SINGLEBEND gain_cc58=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=83 pitch_cc47=$SINGLEBEND gain_cc59=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=84 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=85 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=86 pitch_cc38=$SINGLEBEND gain_cc50=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+// D#5 (87): 1E, extended range. Nashville side is in unison.
+<group> key=87 pitch_cc39=$SINGLEBEND gain_cc51=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=88 pitch_cc40=$SINGLEBEND gain_cc52=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=89 pitch_cc41=$SINGLEBEND gain_cc53=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+<group> key=90 pitch_cc42=$SINGLEBEND gain_cc54=$NOTEMIX #include "Ella G4/includes/Harm7 1E.sfz"
+
+// ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ Noises ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓
+
+// Chucks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 group=5
+<group> key=12 amplitude_cc16=100 
+  <region> sample=chuck1.ogg seq_position=1
+  <region> sample=chuck2.ogg seq_position=2
+  <region> sample=chuck3.ogg seq_position=3
+  <region> sample=chuck4.ogg seq_position=4
+<group> key=12 amplitude_cc17=100 
+  <region> sample=chuck1.ogg seq_position=1
+  <region> sample=chuck2.ogg seq_position=2
+  <region> sample=chuck3.ogg seq_position=3
+  <region> sample=chuck4.ogg seq_position=4
+
+// Swipes ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 off_by=5
+<group> key=13 amplitude_cc16=100 
+  <region> sample=swipe1.ogg seq_position=1
+  <region> sample=swipe2.ogg seq_position=2
+  <region> sample=swipe3.ogg seq_position=3
+  <region> sample=swipe4.ogg seq_position=4
+<group> key=13 amplitude_cc17=100 
+  <region> sample=swipe1.ogg seq_position=1
+  <region> sample=swipe2.ogg seq_position=2
+  <region> sample=swipe3.ogg seq_position=3
+  <region> sample=swipe4.ogg seq_position=4
+
+// Thumps ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=2 loop_mode=one_shot pitch_keytrack=0 group=5
+<group> key=14 amplitude_cc16=100 
+  <region> sample=thump1.ogg seq_position=1
+  <region> sample=thump2.ogg seq_position=2
+<group> key=14 amplitude_cc17=100 
+  <region> sample=thump1.ogg seq_position=1
+  <region> sample=thump2.ogg seq_position=2
+
+// Slaps ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=2 loop_mode=one_shot pitch_keytrack=0 group=5
+<group> key=15 amplitude_cc16=100 
+  <region> sample=slap1.ogg seq_position=1
+  <region> sample=slap2.ogg seq_position=2
+<group> key=15 amplitude_cc17=100 
+  <region> sample=slap1.ogg seq_position=1
+  <region> sample=slap2.ogg seq_position=2
+
+// Knocks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=3 loop_mode=one_shot pitch_keytrack=0 group=5
+<group> key=16 amplitude_cc16=100 
+  <region> sample=knock1.ogg seq_position=1
+  <region> sample=knock2.ogg seq_position=2
+  <region> sample=knock3.ogg seq_position=3
+<group> key=16 amplitude_cc17=100 
+  <region> sample=knock1.ogg seq_position=1
+  <region> sample=knock2.ogg seq_position=2
+  <region> sample=knock3.ogg seq_position=3
+
+// Taps ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=2 loop_mode=one_shot pitch_keytrack=0 group=5
+<group> key=17 amplitude_cc16=100 
+  <region> sample=tap1.ogg seq_position=1
+  <region> sample=tap2.ogg seq_position=2
+<group> key=17 amplitude_cc17=100 
+  <region> sample=tap1.ogg seq_position=1
+  <region> sample=tap2.ogg seq_position=2
+
+// 6E picks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 pitch_oncc10=$PICKDRIFT group=5
+<group> key=18 amplitude_cc16=100 
+  <region> sample=6E-pick.ogg seq_position=1
+  <region> sample=6E-pick.ogg seq_position=2 tune=20
+  <region> sample=6E-pick.ogg seq_position=3 tune=-20
+  <region> sample=6E-pick.ogg seq_position=4 tune=50
+<group> key=18 amplitude_cc17=100 
+  <region> sample=6E-pick.ogg seq_position=1
+  <region> sample=6E-pick.ogg seq_position=2 tune=20
+  <region> sample=6E-pick.ogg seq_position=3 tune=-20
+  <region> sample=6E-pick.ogg seq_position=4 tune=50
+  
+// 5A picks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 pitch_oncc10=$PICKDRIFT group=5
+<group> key=19 amplitude_cc16=100 
+  <region> sample=5A-pick.ogg seq_position=1
+  <region> sample=5A-pick.ogg seq_position=2 tune=50
+  <region> sample=5A-pick.ogg seq_position=3 tune=-20
+  <region> sample=5A-pick.ogg seq_position=4 tune=20
+<group> key=19 amplitude_cc17=100 
+  <region> sample=5A-pick.ogg seq_position=1
+  <region> sample=5A-pick.ogg seq_position=2 tune=50
+  <region> sample=5A-pick.ogg seq_position=3 tune=-20
+  <region> sample=5A-pick.ogg seq_position=4 tune=20
+  
+// 4D picks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 pitch_oncc10=$PICKDRIFT group=5
+<group> key=20 amplitude_cc16=100 
+  <region> sample=4D-pick.ogg seq_position=1
+  <region> sample=4D-pick.ogg seq_position=2 tune=-20
+  <region> sample=4D-pick.ogg seq_position=3 tune=20
+  <region> sample=4D-pick.ogg seq_position=4 tune=-50
+<group> key=20 amplitude_cc17=100 
+  <region> sample=4D-pick.ogg seq_position=1
+  <region> sample=4D-pick.ogg seq_position=2 tune=-20
+  <region> sample=4D-pick.ogg seq_position=3 tune=20
+  <region> sample=4D-pick.ogg seq_position=4 tune=-50
+  
+// 3G picks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 pitch_oncc10=$PICKDRIFT group=5
+<group> key=21 amplitude_cc16=100 
+  <region> sample=3G-pick.ogg seq_position=1
+  <region> sample=3G-pick.ogg seq_position=2 tune=-50
+  <region> sample=3G-pick.ogg seq_position=3 tune=20
+  <region> sample=3G-pick.ogg seq_position=4 tune=-20
+<group> key=21 amplitude_cc17=100 
+  <region> sample=3G-pick.ogg seq_position=1
+  <region> sample=3G-pick.ogg seq_position=2 tune=-50
+  <region> sample=3G-pick.ogg seq_position=3 tune=20
+  <region> sample=3G-pick.ogg seq_position=4 tune=-20
+  
+// 2B picks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 pitch_oncc10=$PICKDRIFT group=5
+<group> key=22 amplitude_cc16=100 
+  <region> sample=2B-pick.ogg seq_position=1 tune=-50
+  <region> sample=2B-pick.ogg seq_position=2 tune=33
+  <region> sample=2B-pick.ogg seq_position=3 tune=-20
+  <region> sample=2B-pick.ogg seq_position=4 tune=20
+<group> key=22 amplitude_cc17=100 
+  <region> sample=2B-pick.ogg seq_position=1 tune=-50
+  <region> sample=2B-pick.ogg seq_position=2 tune=33
+  <region> sample=2B-pick.ogg seq_position=3 tune=-20
+  <region> sample=2B-pick.ogg seq_position=4 tune=20
+  
+// 1E picks ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot pitch_keytrack=0 pitch_oncc10=$PICKDRIFT group=5
+<group> key=23 amplitude_cc16=100 
+  <region> sample=1E-pick.ogg seq_position=1 tune=50
+  <region> sample=1E-pick.ogg seq_position=2 tune=-33
+  <region> sample=1E-pick.ogg seq_position=3 tune=20
+  <region> sample=1E-pick.ogg seq_position=4 tune=-20
+<group> key=23 amplitude_cc17=100 
+  <region> sample=1E-pick.ogg seq_position=1 tune=50
+  <region> sample=1E-pick.ogg seq_position=2 tune=-33
+  <region> sample=1E-pick.ogg seq_position=3 tune=20
+  <region> sample=1E-pick.ogg seq_position=4 tune=-20
+
+// Autopick ▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒▒
+<master> seq_length=4 loop_mode=one_shot volume=4 pitch_oncc19=$PICKDRIFT pitch_curvecc19=1
+amp_veltrack=0 pitch_keytrack=0 amplitude_cc14=100 locc14=1 hicc14=127 group=5
+
+//Below 6E has its own "7B" pick.
+<group> key=35 lokey=24 hikey=39 amplitude_cc16=100 
+  <region> sample=7B-pick.ogg tune=0 seq_position=1
+  <region> sample=7B-pick.ogg tune=-15 seq_position=2
+  <region> sample=7B-pick.ogg tune=22 seq_position=3
+  <region> sample=7B-pick.ogg tune=-40 seq_position=4
+<group> key=35 lokey=24 hikey=39 amplitude_cc17=100 
+  <region> sample=7B-pick.ogg tune=0 seq_position=1
+  <region> sample=7B-pick.ogg tune=-15 seq_position=2
+  <region> sample=7B-pick.ogg tune=22 seq_position=3
+  <region> sample=7B-pick.ogg tune=-40 seq_position=4
+
+//6E
+<group> key=40 hikey=46 amplitude_cc16=100 
+  <region> sample=6E-pick.ogg seq_position=1
+  <region> sample=6E-pick.ogg tune=-50 seq_position=2
+  <region> sample=6E-pick.ogg tune=20 seq_position=3
+  <region> sample=6E-pick.ogg tune=-10 seq_position=4
+<group> key=40 hikey=46 amplitude_cc17=100 
+  <region> sample=6E-pick.ogg seq_position=1
+  <region> sample=6E-pick.ogg tune=-50 seq_position=2
+  <region> sample=6E-pick.ogg tune=20 seq_position=3
+  <region> sample=6E-pick.ogg tune=-10 seq_position=4
+
+//5A
+<group> key=45 lokey=47 hikey=53 amplitude_cc16=100 
+  <region> sample=5A-pick.ogg tune=50 seq_position=1
+  <region> sample=5A-pick.ogg tune=-20 seq_position=2
+  <region> sample=5A-pick.ogg tune=20 seq_position=3
+  <region> sample=5A-pick.ogg seq_position=4
+<group> key=45 lokey=47 hikey=53 amplitude_cc17=100 
+  <region> sample=5A-pick.ogg tune=50 seq_position=1
+  <region> sample=5A-pick.ogg tune=-20 seq_position=2
+  <region> sample=5A-pick.ogg tune=20 seq_position=3
+  <region> sample=5A-pick.ogg seq_position=4
+  
+//4D
+<group> key=50 lokey=54 hikey=60 amplitude_cc16=100
+  <region> sample=4D-pick.ogg tune=-50 seq_position=1
+  <region> sample=4D-pick.ogg tune=20 seq_position=2
+  <region> sample=4D-pick.ogg seq_position=3
+  <region> sample=4D-pick.ogg tune=-20 seq_position=4
+<group> key=50 lokey=54 hikey=60 amplitude_cc17=100
+  <region> sample=4D-pick.ogg tune=-50 seq_position=1
+  <region> sample=4D-pick.ogg tune=20 seq_position=2
+  <region> sample=4D-pick.ogg seq_position=3
+  <region> sample=4D-pick.ogg tune=-20 seq_position=4
+  
+//3G
+<group> key=55 lokey=61 hikey=67 amplitude_cc16=100
+  <region> sample=3G-pick.ogg tune=20 seq_position=1
+  <region> sample=3G-pick.ogg tune=-20 seq_position=2
+  <region> sample=3G-pick.ogg tune=50 seq_position=3
+  <region> sample=3G-pick.ogg seq_position=4
+<group> key=55 lokey=61 hikey=67 amplitude_cc17=100
+  <region> sample=3G-pick.ogg tune=20 seq_position=1
+  <region> sample=3G-pick.ogg tune=-20 seq_position=2
+  <region> sample=3G-pick.ogg tune=50 seq_position=3
+  <region> sample=3G-pick.ogg seq_position=4
+  
+//2B
+<group> key=59 lokey=68 hikey=74 amplitude_cc16=100
+  <region> sample=2B-pick.ogg seq_position=1
+  <region> sample=2B-pick.ogg tune=-50 seq_position=2
+  <region> sample=2B-pick.ogg tune=-10 seq_position=3
+  <region> sample=2B-pick.ogg seq_position=4
+<group> key=59 lokey=68 hikey=74 amplitude_cc17=100
+  <region> sample=2B-pick.ogg seq_position=1
+  <region> sample=2B-pick.ogg tune=-50 seq_position=2
+  <region> sample=2B-pick.ogg tune=-10 seq_position=3
+  <region> sample=2B-pick.ogg seq_position=4
+  
+//1E
+<group> key=64 lokey=75 hikey=100 amplitude_cc16=100
+  <region> sample=1E-pick.ogg tune=-10 seq_position=1
+  <region> sample=1E-pick.ogg tune=50 seq_position=2
+  <region> sample=1E-pick.ogg seq_position=3
+  <region> sample=1E-pick.ogg tune=-40 seq_position=4
+<group> key=64 lokey=75 hikey=100 amplitude_cc17=100
+  <region> sample=1E-pick.ogg tune=-10 seq_position=1
+  <region> sample=1E-pick.ogg tune=50 seq_position=2
+  <region> sample=1E-pick.ogg seq_position=3
+  <region> sample=1E-pick.ogg tune=-40 seq_position=4

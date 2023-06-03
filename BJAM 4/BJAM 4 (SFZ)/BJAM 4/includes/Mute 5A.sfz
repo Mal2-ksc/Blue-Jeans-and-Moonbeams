@@ -1,0 +1,81 @@
+// Light mute crossfades in. 5A string.
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge mute 5A.ogg 
+pitch_keycenter=45 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY5A 
+xfin_locc71=0 
+xfin_hicc71=127 
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle mute 5A.ogg 
+pitch_keycenter=45 
+amplitude_cc17=100 
+pitch_cc31=$WHAMMY5A 
+xfin_locc71=0 
+xfin_hicc71=127 
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle mute 5A.ogg 
+pitch_keycenter=45 
+amplitude_cc18=100 
+hicc17=0 
+phase=invert 
+pitch_cc31=$WHAMMY5A 
+xfin_locc71=0 
+xfin_hicc71=127 
+
+<region> 
+delay_cc62=$MAXPUPPHASE
+sample=neck mute 5A.ogg 
+pitch_keycenter=45 
+amplitude_cc19=100 
+pitch_cc31=$WHAMMY5A 
+xfin_locc71=0 
+xfin_hicc71=127 
+
+// Normal note crossfades out. Used for softening Light Mute. 5A string.
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 5A-mf.ogg 
+pitch_keycenter=45 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY5A 
+xfout_locc71=0 
+xfout_hicc71=127 
+ampeg_attack=0.15
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 5A-mf.ogg 
+pitch_keycenter=45 
+amplitude_cc17=100 
+pitch_cc31=$WHAMMY5A 
+xfout_locc71=0 
+xfout_hicc71=127 
+ampeg_attack=0.15
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 5A-mf.ogg 
+pitch_keycenter=45 
+amplitude_cc18=100 
+hicc17=0 
+phase=invert 
+pitch_cc31=$WHAMMY5A 
+xfout_locc71=0 
+xfout_hicc71=127 
+ampeg_attack=0.15
+
+<region> 
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 5A-mf.ogg 
+pitch_keycenter=45 
+amplitude_cc19=100 
+pitch_cc31=$WHAMMY5A 
+xfout_locc71=0 
+xfout_hicc71=127 
+ampeg_attack=0.15

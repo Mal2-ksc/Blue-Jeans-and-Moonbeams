@@ -1,0 +1,391 @@
+<master> delay_cc14=0.05 group=5 volume=-6 pitch_oncc10=$PICKDRIFT 
+// 7B extended range
+<group> key=23
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=24
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=25
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=26
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=27
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=28
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=29
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=30
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=31
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=32
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=33
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=34
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=35
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=36
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=37
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=38
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+<group> key=39
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-7B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-7B.ogg
+
+// 6E (40)
+<group> key=40
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=41
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=42
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=43
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=44
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=45
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=46
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=47
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=48
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+<group> key=49
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-6E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-6E.ogg
+
+// 5A (50)
+<group> key=50
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-5A.ogg
+
+<group> key=51
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-5A.ogg
+
+<group> key=52
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-5A.ogg
+
+<group> key=53
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-5A.ogg
+
+<group> key=54
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-5A.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-5A.ogg
+
+// 4D (55)
+<group> key=55
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-4D.ogg
+
+<group> key=56
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-4D.ogg
+
+<group> key=57
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-4D.ogg
+
+<group> key=58
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-4D.ogg
+
+<group> key=59
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-4D.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-4D.ogg
+
+// 3G (60)
+<group> key=60
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-3G.ogg
+
+<group> key=61
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-3G.ogg
+
+<group> key=62
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-3G.ogg
+
+<group> key=63
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-3G.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-3G.ogg
+
+// 2B (64)
+<group> key=64
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-2B.ogg
+
+<group> key=65
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-2B.ogg
+
+<group> key=66
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-2B.ogg
+
+<group> key=67
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-2B.ogg
+
+<group> key=68
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-2B.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-2B.ogg
+
+// 1E (69)
+<group> key=69
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=70
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=71
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=72
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=73
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=74
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=75
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=76
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=77
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=78
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=79
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=80
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=81
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=82
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=83
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=84
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=85
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg
+
+<group> key=86
+<region> delay_cc60=$MAXPUPPHASE amplitude_cc16=100 sample=bridge LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE amplitude_cc17=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc61=$MAXPUPPHASE phase=invert amplitude_cc18=100 sample=middle LH mute 5-1E.ogg
+<region> delay_cc62=$MAXPUPPHASE amplitude_cc19=100 sample=neck LH mute 5-1E.ogg

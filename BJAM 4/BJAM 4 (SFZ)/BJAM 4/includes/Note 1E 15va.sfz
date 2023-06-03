@@ -1,0 +1,31 @@
+// Normal notes, 1E string shifted up 2 octaves for extended range. mf only.
+
+// Bridge pickup
+<region>
+delay_cc60=$MAXPUPPHASE
+sample=bridge notes 15va 1E-mf.ogg
+pitch_keycenter=88
+amplitude_cc16=100
+
+// Middle pickup
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 15va 1E-mf.ogg
+pitch_keycenter=88
+amplitude_cc17=100
+
+// Middle pickup inverted
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle notes 15va 1E-mf.ogg
+pitch_keycenter=88
+amplitude_cc18=100
+hicc17=0
+phase=invert
+
+// Neck pickup
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck notes 15va 1E-mf.ogg
+pitch_keycenter=88
+amplitude_cc19=100

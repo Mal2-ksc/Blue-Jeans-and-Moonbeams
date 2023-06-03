@@ -1,0 +1,106 @@
+▓▓▓▓ BJAM 4 -- MIDI CC assignments, ranges, and defaults:
+
+Keyswitch and Noises layout (uses key 60 = C3 convention)
+░░░░░░ C-2  Open Position                    ░░░░░░ C-1  Down Chucks
+  ▓▓▓▓ C#-2 Fifth Position                     ▓▓▓▓ C#-1 Long Swipes
+░░░░░░ D-2  Solo Mode                        ░░░░░░ D-1  Up Chucks
+  ▓▓▓▓ D#-2 Hammer-on/Pull-off/Slide mode      ▓▓▓▓ D#-1 Short Swipes
+░░░░░░ E-2  Up Neck Position                 ░░░░░░ E-1  Pick 7B noise
+░░░░░░ F-2  Harmonic 2                       ░░░░░░ F-1  Pick 6E noise
+  ▓▓▓▓ F#-2 Mute Long                          ▓▓▓▓ F#-1 Pick 5A noise
+░░░░░░ G-2  Harmonic 3                       ░░░░░░ G-1  Pick 4D noise
+  ▓▓▓▓ G#-2 Mute Short                         ▓▓▓▓ G#-1 Pick 3G noise
+░░░░░░ A-2  Harmonic 5                       ░░░░░░ A-1  Pick 2B noise
+  ▓▓▓▓ A#-2 Slap & Pop Mode                    ▓▓▓▓ A#-1 Pick 1E noise
+░░░░░░ B-2  Harmonic 7                       ░░░░░░ B-1  [lowest normal note, not a noise]
+
+CC1: Modulation Depth (up to 120 cents, default=0)  -= PICKUP SELECTION =-
+CC3: Modulation rate (3 to 8 Hz, default 5.5)       CC16: Bridge pickup volume (default=100%)
+CC4: Modulation Fade time (0-10 sec, default 0)     CC17: Middle pickup volume (default=0%)
+CC7: Master volume (default 80/127)                 CC18: Mid-Inverted volume (default=0%)
+CC10: Pick pitch (50%=neutral, ±2 semitones)        CC19: Neck pickup volume (default=0%)
+CC14: Autopicking (default=0/off)                   
+
+CC28: Tracking control for Reactive Tone Modeling
+CC31: Dive Bomb (0%=neutral)
+
+PITCH CLASS BENDS: 50%=neutral, ±2 range
+CC36: C       CC37: C#/Db   CC38: D       CC39: D#/Eb   CC40: E       CC41: F 
+CC42: F#/Gb   CC43: G       CC44: G#/Ab   CC45: A       CC46: A#/Bb   CC47: B
+
+PITCH CLASS MIXING: 50%=neutral, ±12 dB
+CC48: C       CC49: C#/Db   CC50: D       CC51: D#/Eb   CC52: E       CC53: F 
+CC54: F#/Gb   CC55: G       CC56: G#/Ab   CC57: A       CC58: A#/Bb   CC59: B
+
+CC60: Bridge pup phase delay (default 0%)
+CC61: Middle pup phase delay (default 0%)
+CC62: Neck pup phase delay (default 0%)
+
+CC66 (Sostenuto pedal): Alternate way to engage Hammer-Pull-Slide mode
+CC67 (Soft pedal): Engage Left Hand Muting
+CC70: EQ width. 0.083 octaves (1 semitone) to 5.268 octaves. Affects all three bands.
+CC71: Mute Mix (default 100%=all as indicated by keyswitch, 0%=all one mode longer)
+CC72: Fundamental (make harmonics impure, default=0)
+CC73: Attack time (0-1 second)
+
+▒▒▒▒ Ella Gitauru 4 -- MIDI CC assignments, ranges, and defaults:
+
+Keyswitch and Noises layout (uses key 60 = C3 convention)
+░░░░░░ C-2  Open Position                    ░░░░░░ C-1  Chuck noise
+  ▓▓▓▓ C#-2 Fifth Position                     ▓▓▓▓ C#-1 Swipe noise
+░░░░░░ D-2  Solo Mode                        ░░░░░░ D-1  Thump noise (side of fist)
+  ▓▓▓▓ D#-2 Hammer-on/Pull-off/Slide mode      ▓▓▓▓ D#-1 Slap noise (open hand)
+░░░░░░ E-2  Up Neck Position                 ░░░░░░ E-1  Knock noise (knuckles)
+░░░░░░ F-2  Harmonic 2                       ░░░░░░ F-1  Tap noise (fingertip/nail)
+  ▓▓▓▓ F#-2 Mute Long                          ▓▓▓▓ F#-1 Pick 6E noise
+░░░░░░ G-2  Harmonic 3                       ░░░░░░ G-1  Pick 5A noise
+  ▓▓▓▓ G#-2 Mute Short                         ▓▓▓▓ G#-1 Pick 4D noise
+░░░░░░ A-2  Harmonic 5                       ░░░░░░ A-1  Pick 3G noise
+  ▓▓▓▓ A#-2 Slap & Pop Mode                    ▓▓▓▓ A#-1 Pick 2B noise
+░░░░░░ B-2  Harmonic 7                       ░░░░░░ B-1  Pick 1E noise
+
+CC1: Modulation Depth (up to 120 cents, default=0)  -= SIGNAL SELECTION =-
+CC3: Modulation rate (3 to 8 Hz, default 5.5)       CC16: 6-string volume (default=100%)
+CC4: Modulation Fade time (0-10 sec, default 0)     CC17: Nashville volume (default=0%)
+CC7: Master volume (default 80/127)                 CC18: Nashville Invert (default=0%)
+CC10: Pick pitch (50%=neutral, ±2 semitones)        CC19: Nashville Detune. (±10 cents,
+CC14: Autopicking (default=0/off)                            default 70%=+4 cents)
+
+-= TONE STACK =-
+CC20: Bass EQ boost/cut (±24 dB, 50%=0 dB)             
+CC21: Bass EQ center frequency (20-500 Hz, default 50%=140)                     
+CC23: Mid EQ boost/cut (±24 dB, 50%=0 dB)
+CC24: Mid EQ center frequency (200-3000 Hz, default 50%=900)
+CC26: High EQ boost/cut (±24 dB, 50%=0 dB)
+CC27: High EQ center frequency (2000-11025 Hz, default 50%=4256)
+
+CC28: Tracking control for Reactive Tone Modeling
+CC31: Neck Dive (0%=neutral)
+
+PITCH CLASS BENDS: 50%=neutral, ±2 range
+CC36: C       CC37: C#/Db   CC38: D       CC39: D#/Eb   CC40: E       CC41: F 
+CC42: F#/Gb   CC43: G       CC44: G#/Ab   CC45: A       CC46: A#/Bb   CC47: B
+
+PITCH CLASS MIXING: 50%=neutral, ±12 dB
+CC48: C       CC49: C#/Db   CC50: D       CC51: D#/Eb   CC52: E       CC53: F 
+CC54: F#/Gb   CC55: G       CC56: G#/Ab   CC57: A       CC58: A#/Bb   CC59: B
+
+CC60: 6-string delay (default 0%)
+CC61: Nashville delay (default 40%)
+
+CC66 (Sostenuto pedal): Alternate way to engage Hammer-Pull-Slide mode
+CC70: EQ width. 0.083 octaves (1 semitone) to 5.268 octaves. Affects all three bands.
+CC71: Mute Mix (default 100%=all as indicated by keyswitch, 0%=all one mode longer)
+CC72: Fundamental (make harmonics impure, default=0)
+CC73: Attack time (0-1 second)
+
+░░░░ How I perform certain techniques using these instruments:
+• Make Ella G sound like a bigger or smaller guitar: See the Tone Stack and insert settings for "Enciende Mi Fuego" (larger guitar), and "A-M-O-R" (parlor guitar).
+• Tap harmonic: I use Harmonic 3 because it has a softer attack than Harmonic 2, although this necessitates transposing the "input" notes down a fifth. Bar 4 of "A Hazy Affair" uses this effect.
+• Pinch Harmonic: A pick scrape (manual or Autopicking) and a Harmonic 5 or 7.
+• "Crying Guitar" effect (BJAM): Turn on Autopicking, play at low velocity, add a lot of gain.
+• Take some of the plink or chug out of muted notes: You have multiple options, and may use a combination of methods. One is to decrease the Mute Mix (CC71), but another is to add gain and/or compression, and (of course) you can always slap on some reverb.
+• Reverse envelope: Figure out how loud you need to get, and when, and call that 100%. Then shape the CC7 values for the entire track accordingly. You can coax more volume via Pitch Class Mixing (just boost all the notes) and the Tone Stack (boost all three active bands, leave the high shelf wherever it would be anyhow), if output is insufficient and you don't want to put a boost insert between the guitar and the amp.
+• Timbral trill: It is fairly common, almost a cliché, to bend a string and alternate with another string playing the same note, but one or both are slightly out of tune. This effect can be emulated by using Pitch Class Bends and a nearby note to stand in for the bent string.
+• Asymmetric double bends: Pitch Bend creates the smaller of the two bends, and the specific Pitch Class Bend adds more for the larger bend. If you don't care exactly where the bends start, you just want them to be different from each other, you can start with Dive Bomb already engaged and roll it back to the default to scoop up.
+• Tuning strings during performance: Pitch class bends. These work whether the changes are small (e.g.: emulating one string going out of tune and being brought back in), or large (going from standard to Drop D while the low E string is ringing).

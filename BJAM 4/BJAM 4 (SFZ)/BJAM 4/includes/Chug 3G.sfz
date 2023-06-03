@@ -1,0 +1,81 @@
+// Chug crossfades in. Used for Heavy Mute. 3G string. ampeg_decay is to make slowed down samples decay properly.
+<region>
+delay_cc60=$MAXPUPPHASE
+sample=bridge chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc16=100
+xfin_locc71=0
+xfin_hicc71=127
+ampeg_decay=0.8 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc17=100
+xfin_locc71=0
+xfin_hicc71=127
+ampeg_decay=0.8 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc18=100
+hicc17=0
+phase=invert
+xfin_locc71=0
+xfin_hicc71=127
+ampeg_decay=0.8 
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck chug 3G.ogg
+pitch_keycenter=55
+pitch_cc31=$WHAMMY3G
+amplitude_cc19=100
+xfin_locc71=0
+xfin_hicc71=127
+ampeg_decay=0.8 
+
+// Light mute crossfades out. Used for softening Heavy Mute. 3G string.
+<region>
+delay_cc60=$MAXPUPPHASE
+sample=bridge mute 3G.ogg
+pitch_keycenter=55
+amplitude_cc16=100
+pitch_cc31=$WHAMMY3G
+xfout_locc71=0
+xfout_hicc71=127 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle mute 3G.ogg
+pitch_keycenter=55
+amplitude_cc17=100
+pitch_cc31=$WHAMMY3G
+xfout_locc71=0
+xfout_hicc71=127 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle mute 3G.ogg
+pitch_keycenter=55
+amplitude_cc18=100
+hicc17=0
+phase=invert
+pitch_cc31=$WHAMMY3G
+xfout_locc71=0
+xfout_hicc71=127 
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck mute 3G.ogg
+pitch_keycenter=55
+amplitude_cc19=100
+pitch_cc31=$WHAMMY3G
+xfout_locc71=0
+xfout_hicc71=127 

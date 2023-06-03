@@ -1,0 +1,19 @@
+//Tone Stack section -- enable this entire section (except the <global> tag which already is, leave that alone) to enable the Tone Stack as provided in BJAM 3.
+#define $EQ1LO 20 // $EQ1LO = lowest frequency for the center of EQ1
+#define $EQ1HI 480 // $EQ1LO+$EQ1HI = highest frequency for the center of EQ1
+#define $EQ2LO 200 // $EQ2LO = lowest frequency for the center of EQ2
+#define $EQ2HI 2800 // $EQ2LO+$EQ2HI = highest frequency for the center of EQ2
+#define $EQ3LO 2000 // $EQ3LO = lowest frequency for the center of EQ3
+#define $EQ3HI 9025 // $EQ3LO+$EQ3HI = highest frequency for the center of EQ3
+#define $EQBOOST 48 // How far (total dB both ways) can the EQ bands cut or boost?
+set_cc20=63 label_cc20=𝄢20:Bass ±dB ₅₀
+set_cc21=63 label_cc21=𝄢21:Bass Frq ₅₀
+set_cc23=63 label_cc23=𝄡23:Mid ±dB ₅₀
+set_cc24=63 label_cc24=𝄡24:Mid Frq ₅₀
+set_cc26=63 label_cc26=𝄞26:Treb ±dB ₅₀
+set_cc27=63 label_cc27=𝄞27:Treb Frq ₅₀
+set_cc70=63 label_cc70=∩70:EQ Width ₅₀    // 0.083 to 5.268 octaves, 50% = 1.4 (curve 4)
+<global>
+eq1_freq=$EQ1LO eq1_freqcc21=$EQ1HI eq1_freq_curvecc21=4 eq1_bw=0.083 eq1_bw_curvecc70=4 eq1_bwcc70=5.268 eq1_gain=-0.5*$EQBOOST eq1_gaincc20=$EQBOOST // Bass
+eq2_freq=$EQ2LO eq2_freqcc24=$EQ2HI eq2_freq_curvecc24=4 eq2_bw=0.083 eq2_bw_curvecc70=4 eq2_bwcc70=5.268 eq2_gain=-0.5*$EQBOOST eq2_gaincc23=$EQBOOST // Mid
+eq3_freq=$EQ3LO eq3_freqcc27=$EQ3HI eq3_freq_curvecc27=4 eq3_bw=0.083 eq3_bw_curvecc70=4 eq3_bwcc70=5.268 eq3_gain=-0.5*$EQBOOST eq3_gaincc26=$EQBOOST // Treble

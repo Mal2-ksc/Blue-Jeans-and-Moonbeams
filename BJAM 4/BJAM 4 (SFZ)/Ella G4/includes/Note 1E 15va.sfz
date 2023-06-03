@@ -1,0 +1,161 @@
+// Ella G: Normal 6-string note, no 1E sample (2B stands in). Sample has been raised two octaves to provide extended range.
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=2B-mp 15va.ogg 
+pitch_keycenter=83 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY1E 
+xfout_lovel=2 
+xfout_hivel=49 
+hivel=48 
+ampeg_attack=$V1FADE
+
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=2B-mp 15va.ogg 
+pitch_keycenter=83 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY1E 
+xfin_lovel=2 
+xfin_hivel=49 
+hivel=48
+
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=2B-mf 15va.ogg 
+pitch_keycenter=83 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY1E 
+lovel=49 
+hivel=91
+
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=2B-f 15va.ogg 
+pitch_keycenter=83 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY1E 
+lovel=92 
+hivel=119
+
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=2B-ff 15va.ogg 
+pitch_keycenter=83 
+amplitude_cc16=100 
+pitch_cc31=$WHAMMY1E
+lovel=120 
+hivel=127
+
+// Ella G: Nashville 6-string note, 1E string using 2B sample. Sample has been raised two octaves to provide extended range.
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-mp(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc17=100 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+xfout_lovel=2 
+xfout_hivel=49 
+hivel=48 
+ampeg_attack=$V1FADE
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-mp(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc17=100 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+xfin_lovel=2 
+xfin_hivel=49 
+hivel=48
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-mf(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc17=100 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+lovel=49 
+hivel=91
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-f(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc17=100 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+lovel=92 
+hivel=119
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-ff(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc17=100 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+lovel=120 
+hivel=127
+
+// Ella G: Nashville 6-string invert, 1E string using 2B sample. Sample has been raised two octaves to provide extended range.
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-mp(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc18=100
+phase=invert 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+xfout_lovel=2 
+xfout_hivel=49 
+hivel=48 
+ampeg_attack=$V1FADE
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-mp(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc18=100
+phase=invert 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+xfin_lovel=2 
+xfin_hivel=49 
+hivel=48
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-mf(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc18=100
+phase=invert 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+lovel=49 
+hivel=91
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-f(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc18=100
+phase=invert 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+lovel=92 
+hivel=119
+
+<region> 
+delay_cc61=$MAXPUPPHASE
+sample=2B-ff(z) 15va.ogg 
+pitch_keycenter=59 
+amplitude_cc18=100
+phase=invert 
+pitch_cc19=$MAXDETUNE 
+pitch_cc31=$WHAMMY1E 
+lovel=120 
+hivel=127
