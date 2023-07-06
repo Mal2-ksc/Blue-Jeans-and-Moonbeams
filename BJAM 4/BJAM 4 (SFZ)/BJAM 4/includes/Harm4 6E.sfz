@@ -1,0 +1,81 @@
+// Harmonic 2 (octave up from base pitch), no 6E sample (5A stands in).
+<region> 
+delay_cc60=$MAXPUPPHASE
+sample=bridge harmonic 2-5A.ogg
+pitch_keycenter=45
+pitch_cc31=$WHAMMY6E
+amplitude_cc16=100
+xfout_locc72=0
+xfout_hicc72=127
+tune=1200
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle harmonic 2-5A.ogg
+pitch_keycenter=45
+pitch_cc31=$WHAMMY6E
+amplitude_cc17=100
+xfout_locc72=0
+xfout_hicc72=127
+tune=1200
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle harmonic 2-5A.ogg
+pitch_keycenter=45
+pitch_cc31=$WHAMMY6E
+amplitude_cc18=100
+xfout_locc72=0
+xfout_hicc72=127
+hicc17=0
+phase=invert
+tune=1200
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck harmonic 2-5A.ogg
+pitch_keycenter=45
+pitch_cc31=$WHAMMY6E
+amplitude_cc19=100
+xfout_locc72=0
+xfout_hicc72=127
+tune=1200
+
+// Chug crossfades in as Fundamental. 6E string.
+<region>
+delay_cc60=$MAXPUPPHASE
+sample=bridge chug 6E.ogg
+pitch_keycenter=40
+pitch_cc31=$WHAMMY6E
+amplitude_cc16=100
+xfin_locc72=0
+xfin_hicc72=127 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle chug 6E.ogg
+pitch_keycenter=40
+pitch_cc31=$WHAMMY6E
+amplitude_cc17=100
+xfin_locc72=0
+xfin_hicc72=127 
+
+<region>
+delay_cc61=$MAXPUPPHASE
+sample=middle chug 6E.ogg
+pitch_keycenter=40
+pitch_cc31=$WHAMMY6E
+amplitude_cc18=100
+hicc17=0
+phase=invert
+xfin_locc72=0
+xfin_hicc72=127 
+
+<region>
+delay_cc62=$MAXPUPPHASE
+sample=neck chug 6E.ogg
+pitch_keycenter=40
+pitch_cc31=$WHAMMY6E
+amplitude_cc19=100
+xfin_locc72=0
+xfin_hicc72=127 
