@@ -854,7 +854,7 @@ group=5
 <group> key=91 pitch_cc43=$SINGLEBEND gain_cc55=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
 <group> key=92 pitch_cc44=$SINGLEBEND gain_cc56=$NOTEMIX #include "Ella G4/includes/Harm3 1E.sfz"
 //Harmonic 6 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-<master> sw_last=$KEY4HARMONIC3 sw_label=G-2 Harmonic 3(6) delay_cc14=0.05 group=5
+<master> sw_last=$KEY4HARMONIC3 sw_label=G-2 Harmonic 3(6) delay_cc14=0.05 locc66=64 hicc66=127 group=5
 // 6E, extended range. Nashville side is up an octave.
 <group> key=24 pitch_cc36=$SINGLEBEND gain_cc48=$NOTEMIX #include "Ella G4/includes/Harm6 7B.sfz"
 <group> key=25 pitch_cc37=$SINGLEBEND gain_cc49=$NOTEMIX #include "Ella G4/includes/Harm6 7B.sfz"
